@@ -136,10 +136,13 @@
 .tv-player { display: flex; align-items: center; gap: 1vw; min-width: 0; min-height: 0; height: 100%; box-sizing: border-box; background: var(--tv-card); border: 1px solid var(--tv-border); border-radius: 1.1vh; padding: 0 1.4vw; overflow: hidden; }
 .tv-player.right { flex-direction: row-reverse; text-align: right; }
 .tv-player-photo { width: 4vh; height: 4vh; border-radius: 0.8vh; object-fit: cover; background: #263b5e; flex: none; }
-.tv-player-meta { display: flex; flex-direction: column; gap: 0.2vh; min-width: 0; flex: 1; }
-.tv-player-meta strong { font-size: 1.7vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tv-player-meta span { color: var(--tv-muted); font-size: 1.1vh; }
-.tv-player-points { font-size: 1.8vh; font-weight: 800; flex: none; }
+.tv-player-meta { display: flex; flex-direction: column; gap: 0.15vh; min-width: 0; flex: 1; }
+.tv-player-meta strong { font-size: 1.6vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tv-player-meta span { color: var(--tv-muted); font-size: 1vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tv-player-meta span.tv-player-game { font-size: 0.9vh; opacity: 0.8; }
+.tv-player-points { font-size: 1.8vh; font-weight: 800; flex: none; color: var(--tv-text); }
+.tv-player-points.live { color: var(--tv-silver); }
+.tv-player-points.pending { color: var(--tv-muted); }
 
 .tv-slot-badge { align-self: center; width: 3.6vh; height: 3.6vh; border-radius: 50%; display: grid; place-items: center; font-size: 1.05vh; font-weight: 800; color: #061526; flex: none; box-shadow: 0 0 0 0.4vh var(--tv-bg); z-index: 1; }
 

@@ -6,6 +6,7 @@ import type { FantasyMatchup, MatchupSide, StarterRow } from '@/lib/sleeper'
 import { playerPhotoUrl } from '@/lib/sleeper'
 import { useLiveLeague } from '@/lib/use-live-league'
 import { useLiveScoreboard, type ScoreboardGame } from '@/lib/use-live-scoreboard'
+import { normalizeTeamAbbr, type TeamSchedule } from '@/lib/espn'
 
 const DWELL_MS = 7_500
 const TOAST_INTERVAL_MS = 8_000
@@ -202,28 +203,54 @@ function OverviewCard({ item, badges }: { item: FantasyMatchup; badges: string[]
 
 type CardHighlight = 'top' | 'position' | null
 
-function PlayerCell({ player, align, highlight }: { player: StarterRow | undefined; align: 'left' | 'right'; highlight: CardHighlight }) {
+function formatGameLabel(game: TeamSchedule): string {
+  const oppLabel = `${game.isHome ? 'vs' : '@'} ${game.opponent}`
+  if (game.state === 'pre') {
+    const d = new Date(game.commenceTime)
+    const day = d.toLocaleDateString([], { weekday: 'short' })
+    const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    return `${day} ${time} ${oppLabel}`
+  }
+  if (game.state === 'in') return `${game.statusDetail} ${oppLabel}`
+  return `Final ${oppLabel}`
+}
+
+function PlayerCell({
+  player,
+  align,
+  highlight,
+  schedule,
+}: {
+  player: StarterRow | undefined
+  align: 'left' | 'right'
+  highlight: CardHighlight
+  schedule: Record<string, TeamSchedule>
+}) {
   if (!player) return <div className={`tv-player ${align}`} />
+  const game = player.team ? schedule[normalizeTeamAbbr(player.team)] : undefined
   const photo = <img className="tv-player-photo" src={playerPhotoUrl(player.playerId, player.position)} alt="" />
   const meta = (
     <div className="tv-player-meta">
       <strong>{player.name}</strong>
       <span>{player.position}{player.team ? ` · ${player.team}` : ''}</span>
+      {game && <span className="tv-player-game">{formatGameLabel(game)}</span>}
     </div>
   )
+  const pointsClass = game?.state === 'in' ? 'live' : game?.state === 'pre' ? 'pending' : ''
+  const pointsDisplay = game?.state === 'pre' ? '-' : player.points.toFixed(2)
   return (
     <div className={`tv-player ${align} ${highlight ? `highlight-${highlight}` : ''}`}>
       {highlight === 'top' && <span className="tv-player-banner top">🔥 TOP PERFORMER</span>}
       {highlight === 'position' && <span className="tv-player-banner position">⭐ TOP {player.position}</span>}
       {align === 'left' && photo}
       {meta}
-      <b className="tv-player-points">{player.points.toFixed(2)}</b>
+      <b className={`tv-player-points ${pointsClass}`}>{pointsDisplay}</b>
       {align === 'right' && photo}
     </div>
   )
 }
 
-function DetailScreen({ item, highlights }: { item: FantasyMatchup; highlights: Highlights }) {
+function DetailScreen({ item, highlights, schedule }: { item: FantasyMatchup; highlights: Highlights; schedule: Record<string, TeamSchedule> }) {
   const isLive = item.home.score > 0 || item.away.score > 0
   const yetHome = item.home.starters.filter(s => s.points === 0).length
   const yetAway = item.away.starters.filter(s => s.points === 0).length
@@ -285,9 +312,9 @@ function DetailScreen({ item, highlights }: { item: FantasyMatchup; highlights: 
           const badgePos = home?.position ?? away?.position ?? '—'
           return (
             <div className="tv-starter-row" key={i}>
-              <PlayerCell player={home} align="left" highlight={highlightFor(home)} />
+              <PlayerCell player={home} align="left" highlight={highlightFor(home)} schedule={schedule} />
               <span className="tv-slot-badge" style={{ background: positionColor(badgePos) }}>{badgePos}</span>
-              <PlayerCell player={away} align="right" highlight={highlightFor(away)} />
+              <PlayerCell player={away} align="right" highlight={highlightFor(away)} schedule={schedule} />
             </div>
           )
         })}
@@ -404,7 +431,7 @@ export default function Dashboard(props: {
             {matchups.map(item => <OverviewCard key={item.matchupId} item={item} badges={badgesFor(item.matchupId, highlights)} />)}
           </div>
         ) : (
-          <DetailScreen item={screen.matchup} highlights={highlights} />
+          <DetailScreen item={screen.matchup} highlights={highlights} schedule={scoreboard.schedule} />
         )}
       </main>
       <HighlightToast facts={facts} />

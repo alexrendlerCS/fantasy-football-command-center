@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getEspnScoreboard, type EspnGame } from '@/lib/espn'
+import { buildTeamSchedule, getEspnScoreboard, type EspnGame } from '@/lib/espn'
 import { getOddsSnapshots, type OddsSnapshot } from '@/lib/odds'
 
 export const revalidate = 30
@@ -45,6 +45,7 @@ export async function GET() {
 
   const mode = live.length > 0 ? 'live' : 'upcoming'
   const selected = (live.length > 0 ? live : upcoming).slice(0, 3)
+  const schedule = buildTeamSchedule(games)
 
-  return NextResponse.json({ games: selected, mode })
+  return NextResponse.json({ games: selected, mode, schedule })
 }

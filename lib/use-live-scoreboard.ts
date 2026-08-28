@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import type { TeamSchedule } from '@/lib/espn'
 
 export interface ScoreboardGame {
   id: string
@@ -17,9 +18,10 @@ export interface ScoreboardGame {
 export interface ScoreboardData {
   games: ScoreboardGame[]
   mode: 'live' | 'upcoming'
+  schedule: Record<string, TeamSchedule>
 }
 
-const EMPTY: ScoreboardData = { games: [], mode: 'upcoming' }
+const EMPTY: ScoreboardData = { games: [], mode: 'upcoming', schedule: {} }
 
 export function useLiveScoreboard(pollMs = 30_000): ScoreboardData {
   const [data, setData] = useState<ScoreboardData>(EMPTY)
