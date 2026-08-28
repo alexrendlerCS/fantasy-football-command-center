@@ -67,15 +67,25 @@
 .tv-detail-banner.upset { background: #e5484d; color: #fff; }
 @keyframes tvBannerFlash { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
-.tv-player.top-performer { position: relative; overflow: visible; background: linear-gradient(135deg, #4a3b12, #2e2610); border-color: #f5c94d; animation: tvGlow 1.8s ease-in-out infinite; }
-.tv-player.top-performer .tv-player-meta strong,
-.tv-player.top-performer .tv-player-points { color: #ffe9a8; }
+.tv-player.highlight-top { position: relative; overflow: visible; background: linear-gradient(135deg, #4a3b12, #2e2610); border-color: #f5c94d; animation: tvGlow 1.8s ease-in-out infinite; }
+.tv-player.highlight-top .tv-player-meta strong,
+.tv-player.highlight-top .tv-player-points { color: #ffe9a8; }
 @keyframes tvGlow {
   0%, 100% { box-shadow: 0 0 0 0.15vh #f5c94d55; }
   50% { box-shadow: 0 0 0 0.35vh #f5c94dcc; }
 }
 
-.tv-player-banner { position: absolute; top: -1.5vh; left: 50%; transform: translateX(-50%); background: #f5c94d; color: #061526; font-weight: 800; font-size: 1vh; letter-spacing: .05em; padding: 0.4vh 1.1vh; border-radius: 999px; white-space: nowrap; z-index: 2; box-shadow: 0 0.3vh 0.8vh #06152688; }
+.tv-player.highlight-position { position: relative; overflow: visible; background: linear-gradient(135deg, #24344f, #1a2740); border-color: #6ed1ff; animation: tvGlowBlue 1.8s ease-in-out infinite; }
+.tv-player.highlight-position .tv-player-meta strong,
+.tv-player.highlight-position .tv-player-points { color: #cdeeff; }
+@keyframes tvGlowBlue {
+  0%, 100% { box-shadow: 0 0 0 0.15vh #6ed1ff44; }
+  50% { box-shadow: 0 0 0 0.3vh #6ed1ffaa; }
+}
+
+.tv-player-banner { position: absolute; top: -1.5vh; left: 50%; transform: translateX(-50%); color: #061526; font-weight: 800; font-size: 1vh; letter-spacing: .05em; padding: 0.4vh 1.1vh; border-radius: 999px; white-space: nowrap; z-index: 2; box-shadow: 0 0.3vh 0.8vh #06152688; }
+.tv-player-banner.top { background: #f5c94d; }
+.tv-player-banner.position { background: #6ed1ff; }
 
 /* Detail (single matchup, Sleeper-style starter breakdown) */
 .tv-detail { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 1vh; }

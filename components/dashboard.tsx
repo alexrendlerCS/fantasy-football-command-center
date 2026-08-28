@@ -23,6 +23,9 @@ type Screen = { kind: 'overview' } | { kind: 'detail'; matchup: FantasyMatchup }
 
 type PlayerHit = StarterRow & { teamName: string; owner: string; avatar: string | null; matchupId: number }
 
+const LEADER_POSITIONS = ['QB', 'RB', 'WR', 'TE', 'DEF'] as const
+type LeaderPosition = (typeof LEADER_POSITIONS)[number]
+
 function winPct(record: string): number {
   const [wins, losses] = record.split('-').map(Number)
   const total = wins + losses
@@ -35,13 +38,17 @@ function computeHighlights(matchups: FantasyMatchup[]) {
 
   let topScorer: { matchupId: number; side: MatchupSide } | null = null
   let topPlayer: PlayerHit | null = null
+  const positionLeaders: Partial<Record<LeaderPosition, PlayerHit>> = {}
 
   for (const m of matchups) {
     for (const side of [m.home, m.away]) {
       if (!topScorer || side.score > topScorer.side.score) topScorer = { matchupId: m.matchupId, side }
       for (const s of side.starters) {
-        if (!topPlayer || s.points > topPlayer.points) {
-          topPlayer = { ...s, teamName: side.teamName, owner: side.owner, avatar: side.avatar, matchupId: m.matchupId }
+        const hit: PlayerHit = { ...s, teamName: side.teamName, owner: side.owner, avatar: side.avatar, matchupId: m.matchupId }
+        if (!topPlayer || s.points > topPlayer.points) topPlayer = hit
+        if (s.points > 0 && (LEADER_POSITIONS as readonly string[]).includes(s.position)) {
+          const pos = s.position as LeaderPosition
+          if (!positionLeaders[pos] || s.points > positionLeaders[pos]!.points) positionLeaders[pos] = hit
         }
       }
     }
@@ -66,7 +73,7 @@ function computeHighlights(matchups: FantasyMatchup[]) {
     }
   }
 
-  return { anyLive: true as const, topScorer, topPlayer, biggestBlowout, closestGame, biggestUpset }
+  return { anyLive: true as const, topScorer, topPlayer, positionLeaders, biggestBlowout, closestGame, biggestUpset }
 }
 
 type Highlights = ReturnType<typeof computeHighlights>
@@ -155,7 +162,9 @@ function OverviewCard({ item, badges }: { item: FantasyMatchup; badges: string[]
   )
 }
 
-function PlayerCell({ player, align, isTop }: { player: StarterRow | undefined; align: 'left' | 'right'; isTop: boolean }) {
+type CardHighlight = 'top' | 'position' | null
+
+function PlayerCell({ player, align, highlight }: { player: StarterRow | undefined; align: 'left' | 'right'; highlight: CardHighlight }) {
   if (!player) return <div className={`tv-player ${align}`} />
   const photo = <img className="tv-player-photo" src={playerPhotoUrl(player.playerId, player.position)} alt="" />
   const meta = (
@@ -165,8 +174,9 @@ function PlayerCell({ player, align, isTop }: { player: StarterRow | undefined; 
     </div>
   )
   return (
-    <div className={`tv-player ${align} ${isTop ? 'top-performer' : ''}`}>
-      {isTop && <span className="tv-player-banner">🔥 TOP PERFORMER</span>}
+    <div className={`tv-player ${align} ${highlight ? `highlight-${highlight}` : ''}`}>
+      {highlight === 'top' && <span className="tv-player-banner top">🔥 TOP PERFORMER</span>}
+      {highlight === 'position' && <span className="tv-player-banner position">⭐ TOP {player.position}</span>}
       {align === 'left' && photo}
       {meta}
       <b className="tv-player-points">{player.points.toFixed(2)}</b>
@@ -183,9 +193,17 @@ function DetailScreen({ item, highlights }: { item: FantasyMatchup; highlights: 
 
   const isBlowout = highlights.anyLive && highlights.biggestBlowout?.m.matchupId === item.matchupId
   const isUpset = highlights.anyLive && highlights.biggestUpset?.matchupId === item.matchupId
-  const topPlayerId = highlights.anyLive && highlights.topPlayer && highlights.topPlayer.matchupId === item.matchupId
-    ? highlights.topPlayer.playerId
-    : undefined
+  const topPlayerId = highlights.anyLive ? highlights.topPlayer?.playerId : undefined
+  const positionLeaderIds = highlights.anyLive
+    ? new Set(Object.values(highlights.positionLeaders ?? {}).map(p => p.playerId))
+    : new Set<string>()
+
+  const highlightFor = (player: StarterRow | undefined): CardHighlight => {
+    if (!player) return null
+    if (player.playerId === topPlayerId) return 'top'
+    if (positionLeaderIds.has(player.playerId)) return 'position'
+    return null
+  }
 
   return (
     <div className="tv-detail">
@@ -229,9 +247,9 @@ function DetailScreen({ item, highlights }: { item: FantasyMatchup; highlights: 
           const badgePos = home?.position ?? away?.position ?? '—'
           return (
             <div className="tv-starter-row" key={i}>
-              <PlayerCell player={home} align="left" isTop={home?.playerId === topPlayerId} />
+              <PlayerCell player={home} align="left" highlight={highlightFor(home)} />
               <span className="tv-slot-badge" style={{ background: positionColor(badgePos) }}>{badgePos}</span>
-              <PlayerCell player={away} align="right" isTop={away?.playerId === topPlayerId} />
+              <PlayerCell player={away} align="right" highlight={highlightFor(away)} />
             </div>
           )
         })}
@@ -261,18 +279,12 @@ export default function Dashboard(props: {
 }) {
   const { leagueName, week, matchups: liveMatchups } = useLiveLeague(props)
 
-  // ?demo=1 / ?demo=0 force it on/off; with no flag, auto-preview demo scores
-  // whenever the real Sleeper data has nothing live yet (e.g. preseason), and
-  // automatically switch back to real data the moment actual games start.
-  const [demoOverride, setDemoOverride] = useState<boolean | null>(null)
+  // Real data only by default. ?demo=1 is a hidden manual override kept for future
+  // testing/demos — it no longer auto-enables itself once the real season has scores.
+  const [demoMode, setDemoMode] = useState(false)
   useEffect(() => {
-    const flag = new URLSearchParams(window.location.search).get('demo')
-    if (flag === '1') setDemoOverride(true)
-    else if (flag === '0') setDemoOverride(false)
+    setDemoMode(new URLSearchParams(window.location.search).get('demo') === '1')
   }, [])
-
-  const realAnyLive = liveMatchups.some(m => m.home.score > 0 || m.away.score > 0)
-  const demoMode = demoOverride ?? !realAnyLive
 
   // Randomized client-side only, in an effect that runs after hydration — computing
   // Math.random() during render would make the server and client's first pass disagree
