@@ -28,6 +28,9 @@
 .tv-card { width: 100%; height: 100%; box-sizing: border-box; background: #192943; border: 1px solid #2b4163; border-radius: 1.6vh; padding: 2vh 1.8vw; display: flex; flex-direction: column; justify-content: center; gap: 1.4vh; min-height: 0; }
 .tv-card-top { display: flex; justify-content: space-between; align-items: center; color: #7f96b7; font-weight: 800; letter-spacing: .06em; margin-bottom: 1.2vh; flex: none; }
 .tv-card-top b { color: #62ceff; }
+.tv-card-badges { display: flex; align-items: center; gap: 0.6vw; }
+.tv-mini-badge { font-size: 1.5vh; line-height: 1; animation: tvPulse 1.6s ease-in-out infinite; }
+@keyframes tvPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.75; } }
 
 .tv-team-row { display: flex; align-items: center; gap: 1.2vw; flex: 1; min-height: 0; }
 .tv-team-avatar { border-radius: 1vh; background: #31476c; color: #b9eaff; display: grid; place-items: center; font-weight: 800; overflow: hidden; flex: none; }
@@ -48,32 +51,25 @@
 .tv-overview-grid .tv-team-score { font-size: 2.4vh; }
 .tv-overview-grid .tv-versus { font-size: 1.1vh; padding: 0.4vh 0; }
 
-/* Highlights (live "wow" stats screen) */
-.tv-highlights { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 1.6vh; }
-.tv-highlights-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 1.2vh; color: #8fa4c2; text-align: center; }
-.tv-highlights-empty svg { width: 5vh; height: 5vh; color: #f5c94d; }
-.tv-highlights-empty strong { font-size: 2.6vh; color: #fff; }
-.tv-highlights-empty span { font-size: 1.5vh; }
+/* Live highlight overlays: toast popup, alert banner, top-performer glow */
+.tv-toast-layer { position: absolute; top: 8.5vh; left: 0; right: 0; display: flex; justify-content: center; pointer-events: none; z-index: 5; }
+.tv-toast { max-width: 80vw; background: #f5c94d; color: #061526; font-weight: 800; font-size: 1.7vh; letter-spacing: .01em; padding: 1vh 2.4vh; border-radius: 999px; box-shadow: 0 1vh 2.4vh #06152666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation-name: tvToastLife; animation-timing-function: ease-in-out; }
+@keyframes tvToastLife {
+  0% { transform: translateY(-1.5vh); opacity: 0; }
+  8% { transform: translateY(0); opacity: 1; }
+  88% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-1.5vh); opacity: 0; }
+}
 
-.tv-highlight-grid { flex: 3; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 1.6vh 1.6vw; min-height: 0; }
-.tv-highlight-card { width: 100%; height: 100%; box-sizing: border-box; background: #192943; border: 1px solid #2b4163; border-radius: 1.6vh; padding: 1.6vh 2vw; display: flex; flex-direction: column; justify-content: center; gap: 1.2vh; min-height: 0; }
-.tv-highlight-label { display: flex; align-items: center; gap: 0.8vw; color: #7f96b7; font-weight: 800; letter-spacing: .07em; font-size: 1.3vh; }
-.tv-highlight-label svg { width: 1.8vh; height: 1.8vh; color: #f5c94d; flex: none; }
-.tv-highlight-main { display: flex; align-items: center; gap: 1.2vw; min-width: 0; }
-.tv-highlight-avatar { width: 6vh; height: 6vh; border-radius: 1.2vh; background: #31476c; color: #b9eaff; display: grid; place-items: center; font-weight: 800; font-size: 2vh; overflow: hidden; flex: none; }
-.tv-highlight-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.tv-highlight-copy { display: flex; flex-direction: column; gap: 0.3vh; min-width: 0; flex: 1; }
-.tv-highlight-copy strong { font-size: 2.1vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tv-highlight-copy span { color: #8fa4c2; font-size: 1.2vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tv-highlight-stat { font-size: 3vh; font-weight: 800; letter-spacing: -.03em; color: #62ceff; flex: none; }
+.tv-detail-banner { flex: none; text-align: center; font-weight: 800; font-size: 1.5vh; letter-spacing: .06em; padding: 0.7vh 0; border-radius: 1vh; color: #061526; background: #f5c94d; animation: tvBannerFlash 1.6s ease-in-out infinite; }
+.tv-detail-banner.upset { background: #e5484d; color: #fff; }
+@keyframes tvBannerFlash { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
-.tv-leader-strip { flex: 1; display: flex; gap: 1vw; min-height: 0; }
-.tv-leader-chip { flex: 1; display: flex; align-items: center; gap: 0.8vw; background: #192943; border: 1px solid #2b4163; border-radius: 1.2vh; padding: 0 1vw; min-width: 0; }
-.tv-leader-chip .tv-slot-badge { width: 3.2vh; height: 3.2vh; font-size: 0.95vh; box-shadow: none; flex: none; }
-.tv-leader-meta { display: flex; flex-direction: column; gap: 0.2vh; min-width: 0; flex: 1; }
-.tv-leader-meta strong { font-size: 1.35vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tv-leader-meta span { color: #8fa4c2; font-size: 1.05vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tv-leader-points { margin-left: auto; font-weight: 800; font-size: 1.5vh; flex: none; }
+.tv-player.top-performer { border-color: #f5c94d; animation: tvGlow 1.8s ease-in-out infinite; }
+@keyframes tvGlow {
+  0%, 100% { box-shadow: 0 0 0 0.15vh #f5c94d55; }
+  50% { box-shadow: 0 0 0 0.35vh #f5c94dcc; }
+}
 
 /* Detail (single matchup, Sleeper-style starter breakdown) */
 .tv-detail { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 1vh; }
@@ -111,8 +107,10 @@
 .tv-footer { height: 5vh; flex: none; background: #0d1729; border-top: 1px solid #294260; display: flex; align-items: center; gap: 2vw; padding: 0 4vw; }
 .tv-footer-label { display: flex; align-items: center; gap: 0.8vw; color: #62ceff; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: 1.3vh; flex: none; }
 .tv-footer-label svg { width: 1.8vh; height: 1.8vh; }
-.tv-footer-text { flex: 1; color: #9eb1cd; font-size: 1.3vh; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tv-footer-text b { color: #fff; }
+.tv-ticker-viewport { flex: 1; overflow: hidden; min-width: 0; }
+.tv-ticker-track { display: inline-flex; white-space: nowrap; animation: tvMarquee 28s linear infinite; }
+.tv-ticker-track span { padding-right: 6vw; color: #9eb1cd; font-size: 1.3vh; }
+@keyframes tvMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .tv-dots { display: flex; gap: 0.8vh; flex: none; }
 .tv-dot { width: 1vh; height: 1vh; border-radius: 50%; background: #345175; }
 .tv-dot.active { background: #31c4ff; }
