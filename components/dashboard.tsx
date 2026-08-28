@@ -133,11 +133,18 @@ function NflChip({ game }: { game: ScoreboardGame }) {
   const isLive = game.state === 'in'
   const isPre = game.state === 'pre'
   return (
-    <div className="tv-nfl-chip">
+    <div className={`tv-nfl-chip ${isLive ? 'live' : ''}`}>
+      <div className="tv-nfl-chip-top">
+        <span>{game.shortName}</span>
+        <span className="tv-nfl-chip-status">
+          {isLive && <span className="tv-nfl-clock">{game.statusDetail}</span>}
+          <span className={`tv-nfl-pill ${isLive ? 'live' : ''}`}>{isPre ? 'UPCOMING' : isLive ? 'LIVE' : game.statusDetail}</span>
+        </span>
+      </div>
       <div className="tv-nfl-teams">
         <span>{game.away.abbreviation}</span>
         {!isPre && <b>{game.away.score}</b>}
-        <span className="tv-nfl-status">{isLive ? game.statusDetail : isPre ? 'UPCOMING' : game.statusDetail}</span>
+        <i />
         {!isPre && <b>{game.home.score}</b>}
         <span>{game.home.abbreviation}</span>
       </div>
