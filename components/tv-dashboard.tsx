@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Trophy, Zap } from 'lucide-react'
 import type { FantasyMatchup } from '@/lib/sleeper'
+import { useLiveLeague } from '@/lib/use-live-league'
 
 const TOTAL_CYCLE_MS = 120_000
 
@@ -36,15 +37,13 @@ function MatchupCard({ item }: { item: FantasyMatchup }) {
   )
 }
 
-export default function TvDashboard({
-  leagueName,
-  week,
-  matchups,
-}: {
+export default function TvDashboard(props: {
   leagueName: string
   week: number
   matchups: FantasyMatchup[]
 }) {
+  const { leagueName, week, matchups } = useLiveLeague(props)
+
   const screens: Screen[] = useMemo(() => {
     const pairs: FantasyMatchup[][] = []
     for (let i = 0; i < matchups.length; i += 2) pairs.push(matchups.slice(i, i + 2))

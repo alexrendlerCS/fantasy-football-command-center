@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { Bell, ChevronDown, CircleHelp, Flame, Search, Settings, Trophy, Users, Zap, Plus } from 'lucide-react'
 import type { FantasyMatchup } from '@/lib/sleeper'
+import { useLiveLeague } from '@/lib/use-live-league'
 
 const games = [['DAL', 'NYG', '24', '17', 'Q3 · 4:21'], ['CIN', 'BAL', '21', '20', 'Q4 · 8:14'], ['KC', 'BUF', '10', '13', 'HALFTIME'], ['SF', 'MIN', '17', '14', 'Q2 · 0:42'], ['MIA', 'NYJ', '7', '3', 'Q1 · 6:18'], ['DET', 'CHI', '31', '10', 'FINAL']]
 
@@ -46,15 +47,12 @@ function MatchupCard({ item, index, isHighestScoring }: { item: FantasyMatchup; 
   )
 }
 
-export default function Dashboard({
-  leagueName,
-  week,
-  matchups,
-}: {
+export default function Dashboard(props: {
   leagueName: string
   week: number
   matchups: FantasyMatchup[]
 }) {
+  const { leagueName, week, matchups } = useLiveLeague(props)
   const [activeTab, setActiveTab] = useState('Scores')
   const [settings, setSettings] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
