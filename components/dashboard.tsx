@@ -142,11 +142,11 @@ function NflChip({ game }: { game: ScoreboardGame }) {
         </span>
       </div>
       <div className="tv-nfl-teams">
-        <span>{game.away.abbreviation}</span>
+        <span className="away">{game.away.abbreviation}</span>
         {!isPre && <b>{game.away.score}</b>}
         <i />
         {!isPre && <b>{game.home.score}</b>}
-        <span>{game.home.abbreviation}</span>
+        <span className="home">{game.home.abbreviation}</span>
       </div>
       {game.favoredTeam && game.favoredBy != null && (
         <div className="tv-nfl-odds">
@@ -166,10 +166,10 @@ function NflStrip({ scoreboard }: { scoreboard: { games: ScoreboardGame[]; mode:
   )
 }
 
-function TeamRow({ item }: { item: FantasyMatchup['home'] }) {
+function TeamRow({ item, side }: { item: FantasyMatchup['home']; side: 'home' | 'away' }) {
   return (
     <div className="tv-team-row">
-      <div className="tv-team-avatar">
+      <div className={`tv-team-avatar ${side}`}>
         {item.avatar ? <img src={item.avatar} alt="" /> : item.owner.slice(0, 1).toUpperCase()}
       </div>
       <div className="tv-team-copy">
@@ -193,9 +193,9 @@ function OverviewCard({ item, badges }: { item: FantasyMatchup; badges: string[]
           <b>{isLive ? 'LIVE' : 'UPCOMING'}</b>
         </div>
       </div>
-      <TeamRow item={item.home} />
+      <TeamRow item={item.home} side="home" />
       <div className="tv-versus"><span>{item.home.score === item.away.score ? 'TIED' : item.home.score > item.away.score ? 'HOME LEADING' : 'AWAY LEADING'}</span><i /><span>{diff.toFixed(2)} pts</span></div>
-      <TeamRow item={item.away} />
+      <TeamRow item={item.away} side="away" />
     </article>
   )
 }
@@ -252,7 +252,7 @@ function DetailScreen({ item, highlights }: { item: FantasyMatchup; highlights: 
       )}
       <div className="tv-detail-header">
         <div className="tv-team-block">
-          <div className="tv-team-avatar-lg">{item.home.avatar ? <img src={item.home.avatar} alt="" /> : item.home.owner.slice(0, 1).toUpperCase()}</div>
+          <div className="tv-team-avatar-lg home">{item.home.avatar ? <img src={item.home.avatar} alt="" /> : item.home.owner.slice(0, 1).toUpperCase()}</div>
           <div className="tv-team-meta">
             <span className="tv-owner">@{item.home.owner}</span>
             <strong>{item.home.teamName}</strong>
@@ -270,7 +270,7 @@ function DetailScreen({ item, highlights }: { item: FantasyMatchup; highlights: 
             <strong>{item.away.teamName}</strong>
             <span className="tv-record">{item.away.record}</span>
           </div>
-          <div className="tv-team-avatar-lg">{item.away.avatar ? <img src={item.away.avatar} alt="" /> : item.away.owner.slice(0, 1).toUpperCase()}</div>
+          <div className="tv-team-avatar-lg away">{item.away.avatar ? <img src={item.away.avatar} alt="" /> : item.away.owner.slice(0, 1).toUpperCase()}</div>
         </div>
       </div>
       <div className="tv-yet-row">
