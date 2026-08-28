@@ -5,6 +5,7 @@ import { Trophy, Zap } from 'lucide-react'
 import type { FantasyMatchup, MatchupSide, StarterRow } from '@/lib/sleeper'
 import { playerPhotoUrl } from '@/lib/sleeper'
 import { useLiveLeague } from '@/lib/use-live-league'
+import { useLiveScoreboard, type ScoreboardGame } from '@/lib/use-live-scoreboard'
 
 const DWELL_MS = 7_500
 const TOAST_INTERVAL_MS = 8_000
@@ -124,6 +125,36 @@ function HighlightToast({ facts }: { facts: string[] }) {
   return (
     <div className="tv-toast-layer">
       <div key={i} className="tv-toast" style={{ animationDuration: `${TOAST_INTERVAL_MS}ms` }}>{facts[i]}</div>
+    </div>
+  )
+}
+
+function NflChip({ game }: { game: ScoreboardGame }) {
+  const isLive = game.state === 'in'
+  const isPre = game.state === 'pre'
+  return (
+    <div className="tv-nfl-chip">
+      <div className="tv-nfl-teams">
+        <span>{game.away.abbreviation}</span>
+        {!isPre && <b>{game.away.score}</b>}
+        <span className="tv-nfl-status">{isLive ? game.statusDetail : isPre ? 'UPCOMING' : game.statusDetail}</span>
+        {!isPre && <b>{game.home.score}</b>}
+        <span>{game.home.abbreviation}</span>
+      </div>
+      {game.favoredTeam && game.favoredBy != null && (
+        <div className="tv-nfl-odds">
+          {game.favoredTeam === game.home.displayName ? game.home.abbreviation : game.away.abbreviation} -{game.favoredBy}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function NflStrip({ scoreboard }: { scoreboard: { games: ScoreboardGame[]; mode: 'live' | 'upcoming' } }) {
+  if (scoreboard.games.length === 0) return null
+  return (
+    <div className="tv-nfl-strip">
+      {scoreboard.games.map(g => <NflChip key={g.id} game={g} />)}
     </div>
   )
 }
@@ -278,6 +309,7 @@ export default function Dashboard(props: {
   matchups: FantasyMatchup[]
 }) {
   const { leagueName, week, matchups: liveMatchups } = useLiveLeague(props)
+  const scoreboard = useLiveScoreboard()
 
   // Real data only by default. ?demo=1 is a hidden manual override kept for future
   // testing/demos — it no longer auto-enables itself once the real season has scores.
@@ -369,6 +401,7 @@ export default function Dashboard(props: {
         )}
       </main>
       <HighlightToast facts={facts} />
+      <NflStrip scoreboard={scoreboard} />
       <footer className="tv-footer">
         <div className="tv-footer-label"><Zap /> Live</div>
         <div className="tv-ticker-viewport">
