@@ -167,7 +167,7 @@ function NflStrip({ scoreboard }: { scoreboard: { games: ScoreboardGame[]; mode:
   )
 }
 
-function TeamRow({ item, side }: { item: FantasyMatchup['home']; side: 'home' | 'away' }) {
+function TeamRow({ item, side, winPct }: { item: FantasyMatchup['home']; side: 'home' | 'away'; winPct?: number }) {
   return (
     <div className="tv-team-row">
       <div className={`tv-team-avatar ${side}`}>
@@ -175,7 +175,10 @@ function TeamRow({ item, side }: { item: FantasyMatchup['home']; side: 'home' | 
       </div>
       <div className="tv-team-copy">
         <strong>{item.teamName}</strong>
-        <span>{item.owner} · {item.record}</span>
+        <span>
+          {item.owner} · {item.record}
+          {winPct != null && <b className={`tv-winpct ${side}`}> · {winPct}%</b>}
+        </span>
       </div>
       <b className="tv-team-score">{item.score.toFixed(2)}</b>
     </div>
@@ -185,6 +188,8 @@ function TeamRow({ item, side }: { item: FantasyMatchup['home']; side: 'home' | 
 function OverviewCard({ item, badges }: { item: FantasyMatchup; badges: string[] }) {
   const isLive = item.home.score > 0 || item.away.score > 0
   const diff = Math.abs(item.home.score - item.away.score)
+  const homePct = item.winProbability ? Math.round(item.winProbability.home * 100) : undefined
+  const awayPct = item.winProbability ? 100 - (homePct ?? 0) : undefined
   return (
     <article className="tv-card">
       <div className="tv-card-top">
@@ -194,9 +199,9 @@ function OverviewCard({ item, badges }: { item: FantasyMatchup; badges: string[]
           <b>{isLive ? 'LIVE' : 'UPCOMING'}</b>
         </div>
       </div>
-      <TeamRow item={item.home} side="home" />
+      <TeamRow item={item.home} side="home" winPct={homePct} />
       <div className="tv-versus"><span>{item.home.score === item.away.score ? 'TIED' : item.home.score > item.away.score ? 'HOME LEADING' : 'AWAY LEADING'}</span><i /><span>{diff.toFixed(2)} pts</span></div>
-      <TeamRow item={item.away} side="away" />
+      <TeamRow item={item.away} side="away" winPct={awayPct} />
     </article>
   )
 }
@@ -256,6 +261,9 @@ function DetailScreen({ item, highlights, schedule }: { item: FantasyMatchup; hi
   const yetAway = item.away.starters.filter(s => s.points === 0).length
   const rowCount = Math.max(item.home.starters.length, item.away.starters.length)
 
+  const homeWinPct = item.winProbability ? Math.round(item.winProbability.home * 100) : undefined
+  const awayWinPct = item.winProbability ? 100 - (homeWinPct ?? 0) : undefined
+
   const isBlowout = highlights.anyLive && highlights.biggestBlowout?.m.matchupId === item.matchupId
   const isUpset = highlights.anyLive && highlights.biggestUpset?.matchupId === item.matchupId
   const topPlayerId = highlights.anyLive ? highlights.topPlayer?.playerId : undefined
@@ -283,7 +291,7 @@ function DetailScreen({ item, highlights, schedule }: { item: FantasyMatchup; hi
           <div className="tv-team-meta">
             <span className="tv-owner">@{item.home.owner}</span>
             <strong>{item.home.teamName}</strong>
-            <span className="tv-record">{item.home.record}</span>
+            <span className="tv-record">{item.home.record}{homeWinPct != null && <b className="tv-winpct home"> · {homeWinPct}%</b>}</span>
           </div>
         </div>
         <div className="tv-score-block">
@@ -295,7 +303,7 @@ function DetailScreen({ item, highlights, schedule }: { item: FantasyMatchup; hi
           <div className="tv-team-meta">
             <span className="tv-owner">@{item.away.owner}</span>
             <strong>{item.away.teamName}</strong>
-            <span className="tv-record">{item.away.record}</span>
+            <span className="tv-record">{item.away.record}{awayWinPct != null && <b className="tv-winpct away"> · {awayWinPct}%</b>}</span>
           </div>
           <div className="tv-team-avatar-lg away">{item.away.avatar ? <img src={item.away.avatar} alt="" /> : item.away.owner.slice(0, 1).toUpperCase()}</div>
         </div>
@@ -333,7 +341,13 @@ function withDemoScores(matchups: FantasyMatchup[]): FantasyMatchup[] {
       const score = Math.round(starters.reduce((sum, s) => sum + s.points, 0) * 100) / 100
       return { ...side, starters, score }
     }
-    return { ...m, home: applySide(m.home), away: applySide(m.away) }
+    const home = applySide(m.home)
+    const away = applySide(m.away)
+    // The real win% comes from a server-side simulation over real data, which demo mode's
+    // client-side fake scores have no relationship to — fake a plausible one instead so
+    // the demo preview isn't showing percentages disconnected from the scores on screen.
+    const homePct = Math.max(2, Math.min(98, Math.round(50 + (home.score - away.score) * 1.4)))
+    return { ...m, home, away, winProbability: { home: homePct / 100, away: (100 - homePct) / 100 } }
   })
 }
 

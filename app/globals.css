@@ -122,6 +122,8 @@
 .tv-team-meta strong { font-size: 2.1vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tv-record { color: var(--tv-home); font-size: 1.2vh; font-weight: 700; }
 .tv-team-block.right .tv-record { color: var(--tv-away); }
+.tv-winpct.home { color: var(--tv-home); }
+.tv-winpct.away { color: var(--tv-away); }
 
 .tv-score-block { display: flex; align-items: center; gap: 1.4vw; flex: none; }
 .tv-score-block b { font-size: 3.8vh; letter-spacing: -.03em; }

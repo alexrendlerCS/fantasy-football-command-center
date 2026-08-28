@@ -37,6 +37,7 @@ export interface SleeperMatchup {
   points: number
   starters: string[]
   starters_points: number[]
+  players_points: Record<string, number> | null
 }
 
 export interface SleeperNflState {
@@ -58,6 +59,19 @@ export const getLeagueUsers = (leagueId: string) => sleeperFetch<SleeperUser[]>(
 export const getLeagueRosters = (leagueId: string) => sleeperFetch<SleeperRoster[]>(`/league/${leagueId}/rosters`)
 export const getMatchups = (leagueId: string, week: number) =>
   sleeperFetch<SleeperMatchup[]>(`/league/${leagueId}/matchups/${week}`)
+
+// Every rostered player's points for a given week (not just starters) — used to build
+// season-long per-player scoring history for the win-probability simulation.
+export async function getPlayerPointsForWeek(leagueId: string, week: number): Promise<Record<string, number>> {
+  const matchups = await getMatchups(leagueId, week)
+  const merged: Record<string, number> = {}
+  for (const m of matchups) {
+    for (const [playerId, points] of Object.entries(m.players_points ?? {})) {
+      merged[playerId] = points
+    }
+  }
+  return merged
+}
 
 // ~15MB and covers every NFL player ever — Sleeper's own docs say to fetch this at most
 // once a day. It's too large for Next's fetch data cache, so cache it in module scope
@@ -135,6 +149,7 @@ export interface FantasyMatchup {
   matchupId: number
   home: MatchupSide
   away: MatchupSide
+  winProbability?: { home: number; away: number }
 }
 
 export async function getFantasyMatchups(
