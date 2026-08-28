@@ -239,12 +239,33 @@ function DetailScreen({ item, highlights }: { item: FantasyMatchup; highlights: 
   )
 }
 
+// Debug-only: fakes realistic varied scores (real names/photos, random points) so the
+// live-highlight overlays can be previewed before the real season has any scoring.
+// Enabled via ?demo=1 in the URL.
+function withDemoScores(matchups: FantasyMatchup[]): FantasyMatchup[] {
+  return matchups.map(m => {
+    const applySide = (side: MatchupSide): MatchupSide => {
+      const starters = side.starters.map(s => ({ ...s, points: Math.round(Math.random() * 280) / 10 }))
+      const score = Math.round(starters.reduce((sum, s) => sum + s.points, 0) * 100) / 100
+      return { ...side, starters, score }
+    }
+    return { ...m, home: applySide(m.home), away: applySide(m.away) }
+  })
+}
+
 export default function Dashboard(props: {
   leagueName: string
   week: number
   matchups: FantasyMatchup[]
 }) {
-  const { leagueName, week, matchups } = useLiveLeague(props)
+  const { leagueName, week, matchups: liveMatchups } = useLiveLeague(props)
+
+  const [demoMode, setDemoMode] = useState(false)
+  useEffect(() => {
+    setDemoMode(new URLSearchParams(window.location.search).get('demo') === '1')
+  }, [])
+
+  const matchups = useMemo(() => (demoMode ? withDemoScores(liveMatchups) : liveMatchups), [demoMode, liveMatchups])
 
   const screens: Screen[] = useMemo(
     () => [{ kind: 'overview' as const }, ...matchups.map(m => ({ kind: 'detail' as const, matchup: m }))],
@@ -300,7 +321,10 @@ export default function Dashboard(props: {
           <div className="tv-brand-mark"><Trophy /></div>
           <div className="tv-league"><b>{leagueName}</b><span>Fantasy Football · Week {week}</span></div>
         </div>
-        <div className="tv-clock">{clock}</div>
+        <div className="tv-topbar-right">
+          {demoMode && <span className="tv-demo-tag">DEMO</span>}
+          <div className="tv-clock">{clock}</div>
+        </div>
       </header>
       <div className="tv-progress">
         <div key={index} className="tv-progress-bar" style={{ animationDuration: `${DWELL_MS}ms` }} />

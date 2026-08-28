@@ -15,7 +15,9 @@
 .tv-brand-mark svg { width: 2.2vh; height: 2.2vh; }
 .tv-league b { font-size: 1.9vh; display: block; }
 .tv-league span { font-size: 1.3vh; color: #8fa4c2; }
+.tv-topbar-right { display: flex; align-items: center; gap: 1.2vh; }
 .tv-clock { font-size: 2vh; font-weight: 700; color: #6ed1ff; }
+.tv-demo-tag { font-size: 1.2vh; font-weight: 800; letter-spacing: .08em; color: #061526; background: #e5484d; border-radius: 999px; padding: 0.4vh 1.2vh; }
 
 .tv-progress { height: 0.6vh; background: #0d1729; flex: none; }
 .tv-progress-bar { height: 100%; width: 0%; background: #31c4ff; animation-name: tvFill; animation-timing-function: linear; animation-fill-mode: forwards; }
