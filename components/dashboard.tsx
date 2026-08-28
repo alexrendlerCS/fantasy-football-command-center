@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Trophy, Zap } from 'lucide-react'
-import type { FantasyMatchup, StarterRow } from '@/lib/sleeper'
+import { AlertTriangle, Flame, Trophy, TrendingUp, Zap } from 'lucide-react'
+import type { FantasyMatchup, MatchupSide, StarterRow } from '@/lib/sleeper'
 import { playerPhotoUrl } from '@/lib/sleeper'
 import { useLiveLeague } from '@/lib/use-live-league'
 
@@ -18,7 +18,165 @@ const POSITION_COLORS: Record<string, string> = {
 }
 const positionColor = (pos: string) => POSITION_COLORS[pos] ?? '#5f7ca5'
 
-type Screen = { kind: 'overview' } | { kind: 'detail'; matchup: FantasyMatchup }
+type Screen = { kind: 'overview' } | { kind: 'highlights' } | { kind: 'detail'; matchup: FantasyMatchup }
+
+const LEADER_POSITIONS = ['QB', 'RB', 'WR', 'TE', 'DEF'] as const
+
+type PlayerHit = StarterRow & { teamName: string; owner: string; avatar: string | null }
+
+function winPct(record: string): number {
+  const [wins, losses] = record.split('-').map(Number)
+  const total = wins + losses
+  return total > 0 ? wins / total : 0
+}
+
+function computeHighlights(matchups: FantasyMatchup[]) {
+  const anyLive = matchups.some(m => m.home.score > 0 || m.away.score > 0)
+  if (!anyLive) return { anyLive: false as const }
+
+  const allSides: MatchupSide[] = matchups.flatMap(m => [m.home, m.away])
+  const topScorer = allSides.reduce<MatchupSide | null>((best, s) => (s.score > (best?.score ?? -1) ? s : best), null)
+
+  const allStarterHits: PlayerHit[] = matchups.flatMap(m => [
+    ...m.home.starters.map(s => ({ ...s, teamName: m.home.teamName, owner: m.home.owner, avatar: m.home.avatar })),
+    ...m.away.starters.map(s => ({ ...s, teamName: m.away.teamName, owner: m.away.owner, avatar: m.away.avatar })),
+  ])
+  const topPlayer = allStarterHits.reduce<PlayerHit | null>((best, p) => (p.points > (best?.points ?? -1) ? p : best), null)
+
+  const positionLeaders = Object.fromEntries(
+    LEADER_POSITIONS.map(pos => {
+      const best = allStarterHits
+        .filter(p => p.position === pos && p.points > 0)
+        .reduce<PlayerHit | null>((b, p) => (p.points > (b?.points ?? -1) ? p : b), null)
+      return [pos, best]
+    }),
+  ) as Record<(typeof LEADER_POSITIONS)[number], PlayerHit | null>
+
+  const liveMatchups = matchups.filter(m => m.home.score > 0 || m.away.score > 0)
+  const withDiff = liveMatchups.map(m => ({ m, diff: Math.abs(m.home.score - m.away.score) }))
+  const biggestBlowout = withDiff.reduce<(typeof withDiff)[number] | null>((b, x) => (x.diff > (b?.diff ?? -1) ? x : b), null)
+  const closestGame = withDiff.reduce<(typeof withDiff)[number] | null>((b, x) => (b === null || x.diff < b.diff ? x : b), null)
+
+  let biggestUpset: { underdog: MatchupSide; favorite: MatchupSide; leadPts: number; gap: number } | null = null
+  for (const m of liveMatchups) {
+    const homeWinPct = winPct(m.home.record)
+    const awayWinPct = winPct(m.away.record)
+    if (homeWinPct === awayWinPct) continue
+    const [favorite, underdog] = homeWinPct > awayWinPct ? [m.home, m.away] : [m.away, m.home]
+    if (underdog.score > favorite.score) {
+      const gap = Math.abs(homeWinPct - awayWinPct)
+      if (!biggestUpset || gap > biggestUpset.gap) {
+        biggestUpset = { underdog, favorite, leadPts: underdog.score - favorite.score, gap }
+      }
+    }
+  }
+
+  return { anyLive: true as const, topScorer, topPlayer, positionLeaders, biggestBlowout, closestGame, biggestUpset }
+}
+
+function HighlightAvatar({ avatar, fallback }: { avatar: string | null; fallback: string }) {
+  return (
+    <div className="tv-highlight-avatar">
+      {avatar ? <img src={avatar} alt="" /> : fallback.slice(0, 1).toUpperCase()}
+    </div>
+  )
+}
+
+function HighlightsScreen({ matchups }: { matchups: FantasyMatchup[] }) {
+  const h = useMemo(() => computeHighlights(matchups), [matchups])
+
+  if (!h.anyLive) {
+    return (
+      <div className="tv-highlights-empty">
+        <Flame />
+        <strong>No live action yet</strong>
+        <span>Highlights show up here once games kick off.</span>
+      </div>
+    )
+  }
+
+  const upsetOrClosest = h.biggestUpset ?? null
+
+  return (
+    <div className="tv-highlights">
+      <div className="tv-highlight-grid">
+        {h.topScorer && (
+          <article className="tv-highlight-card">
+            <div className="tv-highlight-label"><Trophy /> HIGHEST SCORE RIGHT NOW</div>
+            <div className="tv-highlight-main">
+              <HighlightAvatar avatar={h.topScorer.avatar} fallback={h.topScorer.owner} />
+              <div className="tv-highlight-copy"><strong>{h.topScorer.teamName}</strong><span>{h.topScorer.owner}</span></div>
+              <b className="tv-highlight-stat">{h.topScorer.score.toFixed(2)}</b>
+            </div>
+          </article>
+        )}
+        {h.topPlayer && (
+          <article className="tv-highlight-card">
+            <div className="tv-highlight-label"><Flame /> BEST PLAYER RIGHT NOW</div>
+            <div className="tv-highlight-main">
+              <div className="tv-highlight-avatar"><img src={playerPhotoUrl(h.topPlayer.playerId, h.topPlayer.position)} alt="" /></div>
+              <div className="tv-highlight-copy"><strong>{h.topPlayer.name}</strong><span>{h.topPlayer.position} · {h.topPlayer.team} · {h.topPlayer.teamName}</span></div>
+              <b className="tv-highlight-stat">{h.topPlayer.points.toFixed(2)}</b>
+            </div>
+          </article>
+        )}
+        {h.biggestBlowout && (() => {
+          const { m, diff } = h.biggestBlowout
+          const leader = m.home.score > m.away.score ? m.home : m.away
+          const trailer = leader === m.home ? m.away : m.home
+          return (
+            <article className="tv-highlight-card">
+              <div className="tv-highlight-label"><TrendingUp /> BIGGEST BLOWOUT RIGHT NOW</div>
+              <div className="tv-highlight-main">
+                <HighlightAvatar avatar={leader.avatar} fallback={leader.owner} />
+                <div className="tv-highlight-copy"><strong>{leader.teamName}</strong><span>vs {trailer.teamName}</span></div>
+                <b className="tv-highlight-stat">+{diff.toFixed(2)}</b>
+              </div>
+            </article>
+          )
+        })()}
+        {upsetOrClosest ? (
+          <article className="tv-highlight-card">
+            <div className="tv-highlight-label"><AlertTriangle /> UPSET ALERT</div>
+            <div className="tv-highlight-main">
+              <HighlightAvatar avatar={upsetOrClosest.underdog.avatar} fallback={upsetOrClosest.underdog.owner} />
+              <div className="tv-highlight-copy"><strong>{upsetOrClosest.underdog.teamName}</strong><span>({upsetOrClosest.underdog.record}) leading {upsetOrClosest.favorite.teamName} ({upsetOrClosest.favorite.record})</span></div>
+              <b className="tv-highlight-stat">+{upsetOrClosest.leadPts.toFixed(2)}</b>
+            </div>
+          </article>
+        ) : h.closestGame && (() => {
+          const { m, diff } = h.closestGame
+          return (
+            <article className="tv-highlight-card">
+              <div className="tv-highlight-label"><AlertTriangle /> CLOSEST GAME RIGHT NOW</div>
+              <div className="tv-highlight-main">
+                <HighlightAvatar avatar={m.home.avatar} fallback={m.home.owner} />
+                <div className="tv-highlight-copy"><strong>{m.home.teamName}</strong><span>vs {m.away.teamName}</span></div>
+                <b className="tv-highlight-stat">{diff.toFixed(2)}</b>
+              </div>
+            </article>
+          )
+        })()}
+      </div>
+      <div className="tv-leader-strip">
+        {LEADER_POSITIONS.map(pos => {
+          const leader = h.positionLeaders?.[pos]
+          return (
+            <div className="tv-leader-chip" key={pos}>
+              <span className="tv-slot-badge" style={{ background: positionColor(pos) }}>{pos}</span>
+              {leader ? (
+                <div className="tv-leader-meta"><strong>{leader.name}</strong><span>{leader.teamName}</span></div>
+              ) : (
+                <div className="tv-leader-meta"><span>No scores yet</span></div>
+              )}
+              {leader && <b className="tv-leader-points">{leader.points.toFixed(2)}</b>}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 function TeamRow({ item }: { item: FantasyMatchup['home'] }) {
   return (
@@ -129,7 +287,11 @@ export default function Dashboard(props: {
   const { leagueName, week, matchups } = useLiveLeague(props)
 
   const screens: Screen[] = useMemo(
-    () => [{ kind: 'overview' as const }, ...matchups.map(m => ({ kind: 'detail' as const, matchup: m }))],
+    () => [
+      { kind: 'overview' as const },
+      { kind: 'highlights' as const },
+      ...matchups.map(m => ({ kind: 'detail' as const, matchup: m })),
+    ],
     [matchups],
   )
 
@@ -186,6 +348,8 @@ export default function Dashboard(props: {
           <div className="tv-overview-grid">
             {matchups.map(item => <OverviewCard key={item.matchupId} item={item} />)}
           </div>
+        ) : screen.kind === 'highlights' ? (
+          <HighlightsScreen matchups={matchups} />
         ) : (
           <DetailScreen item={screen.matchup} />
         )}
