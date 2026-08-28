@@ -260,12 +260,28 @@ export default function Dashboard(props: {
 }) {
   const { leagueName, week, matchups: liveMatchups } = useLiveLeague(props)
 
-  const [demoMode, setDemoMode] = useState(false)
+  // ?demo=1 / ?demo=0 force it on/off; with no flag, auto-preview demo scores
+  // whenever the real Sleeper data has nothing live yet (e.g. preseason), and
+  // automatically switch back to real data the moment actual games start.
+  const [demoOverride, setDemoOverride] = useState<boolean | null>(null)
   useEffect(() => {
-    setDemoMode(new URLSearchParams(window.location.search).get('demo') === '1')
+    const flag = new URLSearchParams(window.location.search).get('demo')
+    if (flag === '1') setDemoOverride(true)
+    else if (flag === '0') setDemoOverride(false)
   }, [])
 
-  const matchups = useMemo(() => (demoMode ? withDemoScores(liveMatchups) : liveMatchups), [demoMode, liveMatchups])
+  const realAnyLive = liveMatchups.some(m => m.home.score > 0 || m.away.score > 0)
+  const demoMode = demoOverride ?? !realAnyLive
+
+  // Randomized client-side only, in an effect that runs after hydration — computing
+  // Math.random() during render would make the server and client's first pass disagree
+  // (React would then discard and re-render the subtree, which works but is wasteful).
+  const [demoMatchups, setDemoMatchups] = useState<FantasyMatchup[] | null>(null)
+  useEffect(() => {
+    setDemoMatchups(demoMode ? withDemoScores(liveMatchups) : null)
+  }, [demoMode, liveMatchups])
+
+  const matchups = demoMode && demoMatchups ? demoMatchups : liveMatchups
 
   const screens: Screen[] = useMemo(
     () => [{ kind: 'overview' as const }, ...matchups.map(m => ({ kind: 'detail' as const, matchup: m }))],
