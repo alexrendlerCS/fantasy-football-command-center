@@ -23,9 +23,9 @@
 
 .tv-main { flex: 1; padding: 1.8vh 3.2vw; overflow: hidden; min-height: 0; }
 
-.tv-overview-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 2vh 1.6vw; height: 100%; }
+.tv-overview-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); align-items: stretch; justify-items: stretch; gap: 2vh 1.6vw; height: 100%; }
 
-.tv-card { background: #192943; border: 1px solid #2b4163; border-radius: 1.6vh; padding: 2vh 1.8vw; display: flex; flex-direction: column; justify-content: center; gap: 1.4vh; min-height: 0; }
+.tv-card { width: 100%; height: 100%; box-sizing: border-box; background: #192943; border: 1px solid #2b4163; border-radius: 1.6vh; padding: 2vh 1.8vw; display: flex; flex-direction: column; justify-content: center; gap: 1.4vh; min-height: 0; }
 .tv-card-top { display: flex; justify-content: space-between; align-items: center; color: #7f96b7; font-weight: 800; letter-spacing: .06em; margin-bottom: 1.2vh; flex: none; }
 .tv-card-top b { color: #62ceff; }
 
@@ -68,10 +68,10 @@
 
 .tv-yet-row { display: flex; align-items: center; justify-content: space-between; padding: 0.4vh 0.4vw; color: #8fa4c2; font-size: 1.2vh; font-weight: 800; letter-spacing: .08em; flex: none; }
 
-.tv-starters-list { flex: 1; display: flex; flex-direction: column; gap: 0.5vh; min-height: 0; overflow: hidden; }
-.tv-starter-row { flex: 1; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1.2vw; background: #192943; border: 1px solid #2b4163; border-radius: 1vh; padding: 0 1.6vw; min-height: 0; overflow: hidden; }
+.tv-starters-list { flex: 1; display: flex; flex-direction: column; gap: 0.6vh; min-height: 0; overflow: hidden; }
+.tv-starter-row { flex: 1; display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: 0.8vw; min-height: 0; }
 
-.tv-player { display: flex; align-items: center; gap: 1vw; min-width: 0; min-height: 0; }
+.tv-player { display: flex; align-items: center; gap: 1vw; min-width: 0; min-height: 0; height: 100%; box-sizing: border-box; background: #192943; border: 1px solid #2b4163; border-radius: 1vh; padding: 0 1.4vw; overflow: hidden; }
 .tv-player.right { flex-direction: row-reverse; text-align: right; }
 .tv-player-photo { width: 4vh; height: 4vh; border-radius: 0.8vh; object-fit: cover; background: #263b5e; flex: none; }
 .tv-player-meta { display: flex; flex-direction: column; gap: 0.2vh; min-width: 0; flex: 1; }
@@ -79,7 +79,7 @@
 .tv-player-meta span { color: #8fa4c2; font-size: 1.1vh; }
 .tv-player-points { font-size: 1.8vh; font-weight: 800; flex: none; }
 
-.tv-slot-badge { width: 3.6vh; height: 3.6vh; border-radius: 50%; display: grid; place-items: center; font-size: 1.05vh; font-weight: 800; color: #061526; flex: none; }
+.tv-slot-badge { align-self: center; width: 3.6vh; height: 3.6vh; border-radius: 50%; display: grid; place-items: center; font-size: 1.05vh; font-weight: 800; color: #061526; flex: none; box-shadow: 0 0 0 0.4vh #0d1729; z-index: 1; }
 
 .tv-footer { height: 5vh; flex: none; background: #0d1729; border-top: 1px solid #294260; display: flex; align-items: center; gap: 2vw; padding: 0 4vw; }
 .tv-footer-label { display: flex; align-items: center; gap: 0.8vw; color: #62ceff; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: 1.3vh; flex: none; }
