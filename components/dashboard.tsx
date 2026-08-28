@@ -166,6 +166,7 @@ function PlayerCell({ player, align, isTop }: { player: StarterRow | undefined; 
   )
   return (
     <div className={`tv-player ${align} ${isTop ? 'top-performer' : ''}`}>
+      {isTop && <span className="tv-player-banner">🔥 TOP PERFORMER</span>}
       {align === 'left' && photo}
       {meta}
       <b className="tv-player-points">{player.points.toFixed(2)}</b>
