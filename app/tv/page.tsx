@@ -12,7 +12,7 @@ export default async function TvPage() {
 
   const [league, nflState] = await Promise.all([getLeague(leagueId), getNflState()])
   const week = currentFantasyWeek(nflState)
-  const matchups = await getFantasyMatchups(leagueId, week)
+  const matchups = await getFantasyMatchups(leagueId, week, league.roster_positions)
 
   return <TvDashboard leagueName={league.name} week={week} matchups={matchups} />
 }

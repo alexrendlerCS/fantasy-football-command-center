@@ -11,7 +11,7 @@ export async function GET() {
 
   const [league, nflState] = await Promise.all([getLeague(leagueId), getNflState()])
   const week = currentFantasyWeek(nflState)
-  const matchups = await getFantasyMatchups(leagueId, week)
+  const matchups = await getFantasyMatchups(leagueId, week, league.roster_positions)
 
   return NextResponse.json({ leagueName: league.name, week, matchups })
 }

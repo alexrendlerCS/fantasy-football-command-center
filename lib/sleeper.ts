@@ -6,6 +6,16 @@ export interface SleeperLeague {
   season: string
   status: string
   avatar: string | null
+  roster_positions: string[]
+}
+
+export interface SleeperPlayer {
+  player_id: string
+  full_name?: string
+  first_name?: string
+  last_name?: string
+  position: string | null
+  team: string | null
 }
 
 export interface SleeperUser {
@@ -25,6 +35,8 @@ export interface SleeperMatchup {
   roster_id: number
   matchup_id: number | null
   points: number
+  starters: string[]
+  starters_points: number[]
 }
 
 export interface SleeperNflState {
@@ -47,6 +59,48 @@ export const getLeagueRosters = (leagueId: string) => sleeperFetch<SleeperRoster
 export const getMatchups = (leagueId: string, week: number) =>
   sleeperFetch<SleeperMatchup[]>(`/league/${leagueId}/matchups/${week}`)
 
+// ~15MB and covers every NFL player ever — Sleeper's own docs say to fetch this at most
+// once a day. It's too large for Next's fetch data cache, so cache it in module scope
+// instead (best-effort: persists across warm invocations, refetched on cold start).
+const PLAYERS_TTL_MS = 24 * 60 * 60 * 1000
+let playersCache: { data: Record<string, SleeperPlayer>; fetchedAt: number } | null = null
+
+export async function getAllPlayers(): Promise<Record<string, SleeperPlayer>> {
+  if (playersCache && Date.now() - playersCache.fetchedAt < PLAYERS_TTL_MS) {
+    return playersCache.data
+  }
+  const res = await fetch(`${SLEEPER_API}/players/nfl`, { cache: 'no-store' })
+  if (!res.ok) throw new Error(`Sleeper API error: /players/nfl -> ${res.status}`)
+  const data = (await res.json()) as Record<string, SleeperPlayer>
+  playersCache = { data, fetchedAt: Date.now() }
+  return data
+}
+
+function playerDisplayName(p: SleeperPlayer | undefined, fallbackId: string): string {
+  if (!p) return fallbackId
+  if (p.full_name) return p.full_name
+  if (p.first_name || p.last_name) return `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim()
+  return fallbackId
+}
+
+function playerShortName(p: SleeperPlayer | undefined, fallbackId: string): string {
+  if (!p) return fallbackId
+  if (p.position === 'DEF') return playerDisplayName(p, fallbackId)
+  if (p.first_name && p.last_name) return `${p.first_name[0]}. ${p.last_name}`
+  return playerDisplayName(p, fallbackId)
+}
+
+export function playerPhotoUrl(playerId: string, position: string | null): string {
+  if (position === 'DEF') return `https://sleepercdn.com/images/team_logos/nfl/${playerId.toLowerCase()}.png`
+  return `https://sleepercdn.com/content/nfl/players/thumb/${playerId}.jpg`
+}
+
+const BENCH_SLOTS = new Set(['BN', 'IR', 'TAXI'])
+
+export function starterSlotLabels(rosterPositions: string[]): string[] {
+  return rosterPositions.filter(p => !BENCH_SLOTS.has(p))
+}
+
 export function teamNameFor(user: SleeperUser | undefined): string {
   if (!user) return 'Unknown Team'
   return user.metadata?.team_name?.toUpperCase() ?? user.display_name.toUpperCase()
@@ -59,19 +113,43 @@ export function avatarUrlFor(user: SleeperUser | undefined): string | null {
   return null
 }
 
-export interface FantasyMatchup {
-  matchupId: number
-  home: { teamName: string; owner: string; avatar: string | null; score: number; record: string }
-  away: { teamName: string; owner: string; avatar: string | null; score: number; record: string }
+export interface StarterRow {
+  slot: string
+  playerId: string
+  name: string
+  position: string
+  team: string | null
+  points: number
 }
 
-export async function getFantasyMatchups(leagueId: string, week: number): Promise<FantasyMatchup[]> {
-  const [users, rosters, matchups] = await Promise.all([
+export interface MatchupSide {
+  teamName: string
+  owner: string
+  avatar: string | null
+  score: number
+  record: string
+  starters: StarterRow[]
+}
+
+export interface FantasyMatchup {
+  matchupId: number
+  home: MatchupSide
+  away: MatchupSide
+}
+
+export async function getFantasyMatchups(
+  leagueId: string,
+  week: number,
+  rosterPositions: string[],
+): Promise<FantasyMatchup[]> {
+  const [users, rosters, matchups, players] = await Promise.all([
     getLeagueUsers(leagueId),
     getLeagueRosters(leagueId),
     getMatchups(leagueId, week),
+    getAllPlayers(),
   ])
 
+  const slots = starterSlotLabels(rosterPositions)
   const usersById = new Map(users.map(u => [u.user_id, u]))
   const rostersById = new Map(rosters.map(r => [r.roster_id, r]))
 
@@ -82,6 +160,20 @@ export async function getFantasyMatchups(leagueId: string, week: number): Promis
     group.push(m)
     byMatchupId.set(m.matchup_id, group)
   }
+
+  const buildStarters = (m: SleeperMatchup): StarterRow[] =>
+    (m.starters ?? []).map((playerId, i) => {
+      const player = players[playerId]
+      const position = player?.position ?? slots[i] ?? '—'
+      return {
+        slot: slots[i] ?? position,
+        playerId,
+        name: playerShortName(player, playerId),
+        position,
+        team: player?.team ?? null,
+        points: m.starters_points?.[i] ?? 0,
+      }
+    })
 
   const result: FantasyMatchup[] = []
   for (const [matchupId, pair] of byMatchupId) {
@@ -96,6 +188,7 @@ export async function getFantasyMatchups(leagueId: string, week: number): Promis
         avatar: avatarUrlFor(user),
         score: m.points,
         record,
+        starters: buildStarters(m),
       }
     })
     result.push({ matchupId, home: sides[0], away: sides[1] })
