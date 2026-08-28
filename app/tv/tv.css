@@ -1,0 +1,59 @@
+.tv-shell { position: fixed; inset: 0; display: flex; flex-direction: column; background: #0d1729; color: #f6f9ff; font-family: inherit; overflow: hidden; }
+.tv-scroll-spacer { height: 150px; }
+
+.tv-topbar { height: 9vh; display: flex; align-items: center; justify-content: space-between; padding: 0 4vw; background: #121f35; border-bottom: 1px solid #263b5e; flex: none; }
+.tv-brand { display: flex; align-items: center; gap: 1.4vh; font-weight: 800; }
+.tv-brand-mark { width: 5.4vh; height: 5.4vh; border-radius: 1.2vh; background: #219ddd; color: #061526; display: grid; place-items: center; }
+.tv-brand-mark svg { width: 2.8vh; height: 2.8vh; }
+.tv-league b { font-size: 2.3vh; display: block; }
+.tv-league span { font-size: 1.5vh; color: #8fa4c2; }
+.tv-clock { font-size: 2.4vh; font-weight: 700; color: #6ed1ff; }
+
+.tv-progress { height: 0.7vh; background: #0d1729; flex: none; }
+.tv-progress-bar { height: 100%; width: 0%; background: #31c4ff; animation-name: tvFill; animation-timing-function: linear; animation-fill-mode: forwards; }
+@keyframes tvFill { from { width: 0%; } to { width: 100%; } }
+
+.tv-main { flex: 1; padding: 2.6vh 4vw; overflow: hidden; min-height: 0; }
+
+.tv-overview-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 2vh 1.6vw; height: 100%; }
+.tv-pair-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.4vw; height: 100%; }
+
+.tv-card { background: #192943; border: 1px solid #2b4163; border-radius: 1.6vh; padding: 2vh 1.8vw; display: flex; flex-direction: column; min-height: 0; }
+.tv-card-top { display: flex; justify-content: space-between; align-items: center; color: #7f96b7; font-weight: 800; letter-spacing: .06em; margin-bottom: 1.2vh; flex: none; }
+.tv-card-top b { color: #62ceff; }
+
+.tv-team-row { display: flex; align-items: center; gap: 1.2vw; flex: 1; min-height: 0; }
+.tv-team-avatar { border-radius: 1vh; background: #31476c; color: #b9eaff; display: grid; place-items: center; font-weight: 800; overflow: hidden; flex: none; }
+.tv-team-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.tv-team-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.3vh; }
+.tv-team-copy strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tv-team-copy span { color: #8fa4c2; }
+.tv-team-score { font-weight: 800; letter-spacing: -.03em; flex: none; }
+
+.tv-versus { display: flex; align-items: center; gap: 1.2vw; color: #5f7ca5; font-weight: 800; letter-spacing: .06em; flex: none; }
+.tv-versus i { flex: 1; border-top: 1px dashed #345175; }
+
+/* Overview (compact) sizing */
+.tv-overview-grid .tv-card-top { font-size: 1.35vh; }
+.tv-overview-grid .tv-team-avatar { width: 3.6vh; height: 3.6vh; font-size: 1.4vh; }
+.tv-overview-grid .tv-team-copy strong { font-size: 1.5vh; }
+.tv-overview-grid .tv-team-copy span { font-size: 1.2vh; }
+.tv-overview-grid .tv-team-score { font-size: 2.4vh; }
+.tv-overview-grid .tv-versus { font-size: 1.1vh; padding: 0.4vh 0; }
+
+/* Pair (large) sizing */
+.tv-pair-grid .tv-card-top { font-size: 2vh; }
+.tv-pair-grid .tv-team-avatar { width: 7vh; height: 7vh; font-size: 2.4vh; }
+.tv-pair-grid .tv-team-copy strong { font-size: 3vh; }
+.tv-pair-grid .tv-team-copy span { font-size: 1.8vh; }
+.tv-pair-grid .tv-team-score { font-size: 6.5vh; }
+.tv-pair-grid .tv-versus { font-size: 1.7vh; padding: 1vh 0; }
+
+.tv-footer { height: 6vh; flex: none; background: #0d1729; border-top: 1px solid #294260; display: flex; align-items: center; gap: 2vw; padding: 0 4vw; }
+.tv-footer-label { display: flex; align-items: center; gap: 0.8vw; color: #62ceff; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: 1.5vh; flex: none; }
+.tv-footer-label svg { width: 2vh; height: 2vh; }
+.tv-footer-text { flex: 1; color: #9eb1cd; font-size: 1.5vh; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tv-footer-text b { color: #fff; }
+.tv-dots { display: flex; gap: 0.8vh; flex: none; }
+.tv-dot { width: 1vh; height: 1vh; border-radius: 50%; background: #345175; }
+.tv-dot.active { background: #31c4ff; }
