@@ -76,6 +76,14 @@ export default function TvDashboard(props: {
     return () => lock?.release?.().catch(() => {})
   }, [])
 
+  // A backgrounded Fire TV browser tab resumes instead of reloading, so it can keep
+  // running a stale JS bundle indefinitely. Force a full reload periodically so it
+  // picks up new deploys on its own.
+  useEffect(() => {
+    const id = setTimeout(() => window.location.reload(), 30 * 60 * 1000)
+    return () => clearTimeout(id)
+  }, [])
+
   const screen = screens[index]
   const clock = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 
