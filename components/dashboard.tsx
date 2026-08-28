@@ -6,7 +6,7 @@ import type { FantasyMatchup, StarterRow } from '@/lib/sleeper'
 import { playerPhotoUrl } from '@/lib/sleeper'
 import { useLiveLeague } from '@/lib/use-live-league'
 
-const DWELL_MS = 15_000
+const DWELL_MS = 7_500
 
 const POSITION_COLORS: Record<string, string> = {
   QB: '#e5484d',
