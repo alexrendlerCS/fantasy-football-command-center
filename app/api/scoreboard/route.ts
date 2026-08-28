@@ -1,17 +1,38 @@
 import { NextResponse } from 'next/server'
-import { getEspnScoreboard } from '@/lib/espn'
-import { getOddsSnapshots } from '@/lib/odds'
+import { getEspnScoreboard, type EspnGame } from '@/lib/espn'
+import { getOddsSnapshots, type OddsSnapshot } from '@/lib/odds'
 
 export const revalidate = 30
+
+// Division rivals play twice a season, so team names alone aren't a unique key across
+// the whole schedule — pick whichever odds entry for that team pair has the closest
+// kickoff time to this specific ESPN game, not just the first name match.
+function closestOdds(game: EspnGame, oddsByPair: Map<string, OddsSnapshot[]>): OddsSnapshot | null {
+  const candidates = oddsByPair.get(`${game.away.displayName}@${game.home.displayName}`)
+  if (!candidates || candidates.length === 0) return null
+  const gameTime = new Date(game.commenceTime).getTime()
+  return candidates.reduce<OddsSnapshot | null>((best, c) => {
+    const diff = Math.abs(new Date(c.commenceTime).getTime() - gameTime)
+    const bestDiff = best ? Math.abs(new Date(best.commenceTime).getTime() - gameTime) : Infinity
+    return diff < bestDiff ? c : best
+  }, null)
+}
 
 export async function GET() {
   const games = await getEspnScoreboard()
   const anyLive = games.some(g => g.state === 'in')
   const odds = await getOddsSnapshots(anyLive)
-  const oddsByPair = new Map(odds.map(o => [`${o.awayTeam}@${o.homeTeam}`, o]))
+
+  const oddsByPair = new Map<string, OddsSnapshot[]>()
+  for (const o of odds) {
+    const key = `${o.awayTeam}@${o.homeTeam}`
+    const list = oddsByPair.get(key) ?? []
+    list.push(o)
+    oddsByPair.set(key, list)
+  }
 
   const enriched = games.map(g => {
-    const o = oddsByPair.get(`${g.away.displayName}@${g.home.displayName}`)
+    const o = closestOdds(g, oddsByPair)
     return { ...g, favoredTeam: o?.favoredTeam ?? null, favoredBy: o?.favoredBy ?? null }
   })
 

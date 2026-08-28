@@ -11,6 +11,7 @@ const IDLE_TTL_MS = 60 * 60 * 1000
 export interface OddsSnapshot {
   homeTeam: string
   awayTeam: string
+  commenceTime: string
   favoredTeam: string | null
   favoredBy: number | null
 }
@@ -45,7 +46,7 @@ export async function getOddsSnapshots(anyLive: boolean): Promise<OddsSnapshot[]
       favoredBy = Math.abs(homeSpread)
     }
 
-    return { homeTeam: g.home_team, awayTeam: g.away_team, favoredTeam, favoredBy }
+    return { homeTeam: g.home_team, awayTeam: g.away_team, commenceTime: g.commence_time, favoredTeam, favoredBy }
   })
 
   cache = { data: snapshots, fetchedAt: Date.now() }
