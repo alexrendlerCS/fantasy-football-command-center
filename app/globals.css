@@ -7,7 +7,7 @@
 * { box-sizing: border-box; } html,body { margin:0; min-height:100%; background:var(--background); } body { color:var(--foreground); font-family:Arial,Helvetica,sans-serif; } button,input,select { font:inherit; } button { cursor:pointer; }
 
 .tv-shell { position: fixed; inset: 0; display: flex; flex-direction: column; background: #0d1729; color: #f6f9ff; font-family: inherit; overflow: hidden; }
-.tv-scroll-spacer { height: 150px; }
+.tv-scroll-spacer { height: calc(100vh + 100px); }
 
 .tv-topbar { height: 7vh; display: flex; align-items: center; justify-content: space-between; padding: 0 4vw; background: #121f35; border-bottom: 1px solid #263b5e; flex: none; }
 .tv-brand { display: flex; align-items: center; gap: 1.2vh; font-weight: 800; }

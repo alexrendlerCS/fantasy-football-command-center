@@ -315,6 +315,7 @@ export default function Dashboard(props: {
   const clock = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 
   return (
+    <>
     <div className="tv-shell">
       <header className="tv-topbar">
         <div className="tv-brand">
@@ -351,7 +352,8 @@ export default function Dashboard(props: {
           {screens.map((_, i) => <span key={i} className={`tv-dot ${i === index ? 'active' : ''}`} />)}
         </div>
       </footer>
-      <div className="tv-scroll-spacer" />
     </div>
+    <div className="tv-scroll-spacer" />
+    </>
   )
 }
